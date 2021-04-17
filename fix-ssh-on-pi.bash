@@ -52,8 +52,8 @@ else
 fi
 
 variables=(
-  root_password_clear
-  pi_password_clear
+  # root_password_clear
+  # pi_password_clear
   public_key_file
   wifi_file
 )
@@ -181,9 +181,28 @@ then
 fi
 
 echo "Change the passwords and sshd_config file"
+echo "Setting root password"
+root_password="$( python3 set_pw.py)"
+echo "Please type password again"
+while [ "$( python3 verify_pw.py $root_password )" != "True" ]
+do
+    echo "Verificytion failed, passwords don't match"
+    root_password="$( python3 set_pw.py)"
+    echo "Please type password again"
+done
 
-root_password="$( python3 -c "import crypt; print(crypt.crypt('${root_password_clear}', crypt.mksalt(crypt.METHOD_SHA512)))" )"
 pi_password="$( python3 -c "import crypt; print(crypt.crypt('${pi_password_clear}', crypt.mksalt(crypt.METHOD_SHA512)))" )"
+echo "Setting pi password"
+pi_password="$( python3 set_pw.py)"
+echo "Please type password again"
+while [ "$( python3 verify_pw.py $pi_password )" != "True" ]
+do
+    echo "Verificytion failed, passwords don't match"
+    pi_password="$( python3 set_pw.py)"
+    echo "Please type password again"
+done
+
+
 sed -e "s#^root:[^:]\+:#root:${root_password}:#" "${sdcard_mount}/etc/shadow" -e  "s#^pi:[^:]\+:#pi:${pi_password}:#" -i "${sdcard_mount}/etc/shadow"
 sed -e 's;^#PasswordAuthentication.*$;PasswordAuthentication no;g' -e 's;^PermitRootLogin .*$;PermitRootLogin no;g' -i "${sdcard_mount}/etc/ssh/sshd_config"
 mkdir "${sdcard_mount}/home/pi/.ssh"
