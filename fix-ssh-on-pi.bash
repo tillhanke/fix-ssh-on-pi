@@ -123,10 +123,10 @@ then
 fi
 
 # unzip
-extracted_image=$( 7z l raspbian_image.zip | awk '/-raspios-/ {print $NF}' )
+extracted_image=$( zipnote raspbian_image.zip |head -n1|sed 's/^@ //' )
 echo "The name of the image is \"${extracted_image}\""
 
-7z x -y raspbian_image.zip
+unzip raspbian_image.zip
 
 if [ ! -e ${extracted_image} ]
 then
