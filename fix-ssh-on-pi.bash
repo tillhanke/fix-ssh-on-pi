@@ -212,27 +212,29 @@ chown 1000:1000 "${sdcard_mount}/home/pi/.ssh"
 cat ${public_key_file} >> "${sdcard_mount}/home/pi/.ssh/authorized_keys"
 chown 1000:1000 "${sdcard_mount}/home/pi/.ssh/authorized_keys"
 chmod 0600 "${sdcard_mount}/home/pi/.ssh/authorized_keys"
+if [ -e "${first_boot}" ]
+then
+    echo "[Unit]
+    Description=FirstBoot
+    After=network.target
+    Before=rc-local.service
+    ConditionFileNotEmpty=/boot/firstboot.sh
 
-echo "[Unit]
-Description=FirstBoot
-After=network.target
-Before=rc-local.service
-ConditionFileNotEmpty=/boot/firstboot.sh
+    [Service]
+    ExecStart=/boot/firstboot.sh
+    ExecStartPost=/bin/mv /boot/firstboot.sh /boot/firstboot.sh.done
+    Type=oneshot
+    RemainAfterExit=no
 
-[Service]
-ExecStart=/boot/firstboot.sh
-ExecStartPost=/bin/mv /boot/firstboot.sh /boot/firstboot.sh.done
-Type=oneshot
-RemainAfterExit=no
+    [Install]
+    WantedBy=multi-user.target" > "${sdcard_mount}/lib/systemd/system/firstboot.service"
 
-[Install]
-WantedBy=multi-user.target" > "${sdcard_mount}/lib/systemd/system/firstboot.service"
-
-cd "${sdcard_mount}/etc/systemd/system/multi-user.target.wants" && ln -s "/lib/systemd/system/firstboot.service" "./firstboot.service"
-cd -
-
+    cd "${sdcard_mount}/etc/systemd/system/multi-user.target.wants" && ln -s "/lib/systemd/system/firstboot.service" "./firstboot.service"
+    cd -
+fi
 umount_sdcard
 
+rm -r ${sdcard_mount}
 new_name="${extracted_image%.*}-ssh-enabled.img"
 cp -v "${extracted_image}" "${new_name}"
 
