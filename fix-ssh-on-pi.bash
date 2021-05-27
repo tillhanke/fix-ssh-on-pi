@@ -238,7 +238,7 @@ rm -r ${sdcard_mount}
 new_name="${extracted_image%.*}-ssh-enabled.img"
 cp -v "${extracted_image}" "${new_name}"
 
-losetup --detach ${loop_base}
+losetup -d ${loop_base}
 
 lsblk
 
