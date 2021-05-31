@@ -2,3 +2,4 @@ ssh_key.pub
 fix-ssh-on-pi.ini
 wpa_supplicant.conf
 raspbian_image.zip
+*.img
