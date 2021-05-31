@@ -232,6 +232,17 @@ then
     cd "${sdcard_mount}/etc/systemd/system/multi-user.target.wants" && ln -s "/lib/systemd/system/firstboot.service" "./firstboot.service"
     cd -
 fi
+echo ""
+echo "Do you want to change the Hostname?(Y/n)"
+read QHOST
+if [ "${QHOST,,}" == "y" ] || [ $QHOST == "" ]
+then
+    echo "Enter hostname"
+    read HNAME
+    echo $HNAME > $sdcard_mount/etc/hostname
+fi
+echo ""
+
 umount_sdcard
 
 rm -r ${sdcard_mount}
