@@ -243,6 +243,19 @@ then
 fi
 echo ""
 
+echo "Do you want a static ipv4 address?(y/N)"
+read QIP
+if [ "${QIP,,}" == "y" ]
+then
+    if [ -e static_ip.conf ]
+    then
+        cat static_ip.conf >> $sdcard_mount/etc/dhcpcd.conf
+    else
+        echo "static_ip.conf not found"
+        echo "ip address not changed to static"
+    fi
+fi
+
 umount_sdcard
 
 rm -r ${sdcard_mount}
