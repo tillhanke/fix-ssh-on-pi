@@ -235,11 +235,14 @@ fi
 echo ""
 echo "Do you want to change the Hostname?(Y/n)"
 read QHOST
-if [ "${QHOST,,}" == "y" ] || [ $QHOST == "" ]
+if [ -z $QHOST ] || [ "${QHOST,,}" == "y" ] 
 then
     echo "Enter hostname"
     read HNAME
+    echo "The hostname will be set to $(echo ${HNAME,,}| sed 's/[^0-9,a-z]*//g')"
+    HNAME=$(echo ${HNAME,,}| sed 's/[^0-9,a-z]*//g')
     echo $HNAME > $sdcard_mount/etc/hostname
+    sed -i 's/raspberrypi/$HNAME/' $sdcard_mount/etc/hosts
 fi
 echo ""
 
