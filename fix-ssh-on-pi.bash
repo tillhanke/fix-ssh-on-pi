@@ -206,9 +206,12 @@ done
 
 sed -e "s#^root:[^:]\+:#root:${root_password}:#" "${sdcard_mount}/etc/shadow" -e  "s#^pi:[^:]\+:#pi:${pi_password}:#" -i "${sdcard_mount}/etc/shadow"
 sed -e 's;^#PasswordAuthentication.*$;PasswordAuthentication no;g' -e 's;^PermitRootLogin .*$;PermitRootLogin no;g' -i "${sdcard_mount}/etc/ssh/sshd_config"
-mkdir "${sdcard_mount}/home/pi/.ssh"
-chmod 0700 "${sdcard_mount}/home/pi/.ssh"
-chown 1000:1000 "${sdcard_mount}/home/pi/.ssh"
+if [ ! -e "${sdcard_mount}/home/pi/.ssh" ]
+then
+    mkdir "${sdcard_mount}/home/pi/.ssh"
+    chmod 0700 "${sdcard_mount}/home/pi/.ssh"
+    chown 1000:1000 "${sdcard_mount}/home/pi/.ssh"
+fi
 cat ${public_key_file} >> "${sdcard_mount}/home/pi/.ssh/authorized_keys"
 chown 1000:1000 "${sdcard_mount}/home/pi/.ssh/authorized_keys"
 chmod 0600 "${sdcard_mount}/home/pi/.ssh/authorized_keys"
@@ -234,11 +237,20 @@ then
 fi
 echo ""
 echo "Do you want to change the Hostname?(Y/n)"
-read QHOST
-if [ -z $QHOST ] || [ "${QHOST,,}" == "y" ] 
+if [ ! $fixed_hostname ]
 then
-    echo "Enter hostname"
-    read HNAME
+    read QHOST
+    if [ -z $QHOST ] || [ "${QHOST,,}" == "y" ] 
+    then
+        echo "Enter hostname"
+        read HNAME
+        echo "The hostname will be set to $(echo ${HNAME,,}| sed 's/[^0-9,a-z]*//g')"
+        HNAME=$(echo ${HNAME,,}| sed 's/[^0-9,a-z]*//g')
+        echo $HNAME > $sdcard_mount/etc/hostname
+        sed -i "s/raspberrypi/$HNAME/" $sdcard_mount/etc/hosts
+    fi
+else
+    HNAME=$fixed_hostname
     echo "The hostname will be set to $(echo ${HNAME,,}| sed 's/[^0-9,a-z]*//g')"
     HNAME=$(echo ${HNAME,,}| sed 's/[^0-9,a-z]*//g')
     echo $HNAME > $sdcard_mount/etc/hostname
@@ -246,15 +258,27 @@ then
 fi
 echo ""
 
-echo "Do you want a static ipv4 address?(y/N)"
-read QIP
-if [ "${QIP,,}" == "y" ]
+if [ ! $static_ip_file ]
 then
-    if [ -e static_ip.conf ]
+    echo "Do you want a static ipv4 address?(y/N)"
+    read QIP
+    if [ "${QIP,,}" == "y" ]
     then
-        cat static_ip.conf >> $sdcard_mount/etc/dhcpcd.conf
+        if [ -e static_ip.conf ]
+        then
+            cat static_ip.conf >> $sdcard_mount/etc/dhcpcd.conf
+        else
+            echo "static_ip.conf not found"
+            echo "ip address not changed to static"
+        fi
+    fi
+else
+    if [ -e $static_ip_file ]
+    then
+        echo "set static ip"
+        cat $static_ip_file >> $sdcard_mount/etc/dhcpcd.conf
     else
-        echo "static_ip.conf not found"
+        echo "$static_ip_file not found"
         echo "ip address not changed to static"
     fi
 fi
