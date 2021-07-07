@@ -242,7 +242,7 @@ then
     echo "The hostname will be set to $(echo ${HNAME,,}| sed 's/[^0-9,a-z]*//g')"
     HNAME=$(echo ${HNAME,,}| sed 's/[^0-9,a-z]*//g')
     echo $HNAME > $sdcard_mount/etc/hostname
-    sed -i 's/raspberrypi/$HNAME/' $sdcard_mount/etc/hosts
+    sed -i "s/raspberrypi/$HNAME/" $sdcard_mount/etc/hosts
 fi
 echo ""
 
